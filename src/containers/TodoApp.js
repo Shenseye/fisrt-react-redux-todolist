@@ -1,16 +1,41 @@
-import React, { Component } from 'react';
-import AddTodo from '../components/AddTodos';
-import TodoList from '../components/TodoList';
-import Footer from '../components/Footer';
+import React, { Component, PropTypes } from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import Header from '../components/Header';
+import MainSection from '../components/MainSection';
+import {actions as TodoActions} from '../redux/modules/todos';
 
-export default class App extends Component {
+function mapStateToProps(state) {
+  return {
+    todos: state.todos
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    actions: bindActionCreators(TodoActions, dispatch)
+  };
+}
+
+export class TodoApp extends Component {
+  static propTypes = {
+    todos: PropTypes.array.isRequired,
+    actions: PropTypes.object.isRequired
+  }
+
   render() {
+    const { todos, actions } = this.props;
+
     return (
-      <div {...this.props}>
-        <AddTodo />
-        <TodoList />
-        <Footer />
+      <div
+        className='todoapp'
+        {...this.props}
+      >
+        <Header addTodo={actions.addTodo} />
+        <MainSection todos={todos} actions={actions} />
       </div>
     );
   }
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(TodoApp);

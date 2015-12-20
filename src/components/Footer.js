@@ -1,55 +1,78 @@
 import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
-import { actions } from '../redux/modules/visibilityFilter';
+import classnames from 'classnames';
+import { VisibilityFilters } from '../redux/modules/visibilityFilter';
 
-function mapStateToProps(state) {
-  return {
-    filter: state.visibilityFilter
-  };
-}
+const { SHOW_ALL, SHOW_ACTIVE, SHOW_COMPLETED } = VisibilityFilters;
 
-export class Footer extends Component {
+const FILTER_TITLES = {
+  [SHOW_ALL]: 'All',
+  [SHOW_ACTIVE]: 'Active',
+  [SHOW_COMPLETED]: 'Completed'
+};
+
+export default class Footer extends Component {
   static propTypes = {
-    setVisibilityFilter: PropTypes.func.isRequired,
-    filter: PropTypes.oneOf([
-      'SHOW_ALL',
-      'SHOW_COMPLETED',
-      'SHOW_ACTIVE'
-    ]).isRequired
+    completedCount: PropTypes.number.isRequired,
+    activeCount: PropTypes.number.isRequired,
+    filter: PropTypes.string.isRequired,
+    onClearCompleted: PropTypes.func.isRequired,
+    onShow: PropTypes.func.isRequired
   }
 
-  renderFilter(filter, name) {
-    if (filter === this.props.filter) {
-      return name;
-    }
+  renderTodoCount() {
+    const { activeCount } = this.props;
+    const itemWord = activeCount === 1 ? 'todo' : 'todos';
+
+    return (
+      <span className='todo-count'>
+        <strong>{ activeCount || 'No' }</strong> { itemWord } left
+      </span>
+    );
+  }
+
+  renderFilterLink(filter, name) {
+    const title = FILTER_TITLES[filter];
+    const { filter: selectedFilter, onShow } = this.props;
 
     return (
       <a
-        href='#'
-        onClick={e => {
-          e.preventDefault();
-          this.props.setVisibilityFilter(filter);
-        }}
+        className={classnames({ selected: filter === selectedFilter })}
+        style={{ cursor: 'pointer' }}
+        onClick={() => onShow(filter)}
       >
-        {name}
+        {title}
       </a>
     );
   }
 
+  renderClearButton() {
+    const { completedCount, onClearCompleted } = this.props;
+
+    if (completedCount > 0) {
+      return (
+        <button
+          className='clear-completed'
+          onClick={onClearCompleted}
+        >
+          Clear completed
+        </button>
+      );
+    }
+  }
+
   render() {
     return (
-      <p>
-        Show:
-        {' '}
-        {this.renderFilter('SHOW_ALL', 'All')}
-        {', '}
-        {this.renderFilter('SHOW_COMPLETED', 'Completed')}
-        {', '}
-        {this.renderFilter('SHOW_ACTIVE', 'Active')}
-        .
-      </p>
+      <footer className='footer'>
+        {this.renderTodoCount()}
+        <ul className='filters'>
+          {[ SHOW_ALL, SHOW_ACTIVE, SHOW_COMPLETED ].map(filter =>
+            <li key={filter}>
+              {this.renderFilterLink(filter)}
+            </li>
+          )}
+        </ul>
+        {this.renderClearButton()}
+      </footer>
     );
   }
 }
-
-export default connect(mapStateToProps, actions)(Footer);
